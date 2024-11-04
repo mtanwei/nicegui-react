@@ -49,6 +49,7 @@ async def index():
             ).on('onClick', lambda event: ui.notify(f'Clicked on React component: {event}'))
 ``` 
 
+
 ## Parameters
 - *react_project_path* (str): Path to your React project directory.
 - *main_component* (str): Name of the main React component to render.
