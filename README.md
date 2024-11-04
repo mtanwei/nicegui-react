@@ -47,7 +47,8 @@ async def index():
             ).style('width: 100%; height: 100%;').props(
                 title="Hello from Python!"
             ).on('onClick', lambda event: ui.notify(f'Clicked on React component: {event}'))
-``` 
+```
+
 
 
 ## Parameters
