@@ -19,7 +19,8 @@ Install the package via pip:
 
 ```bash
 pip install nicegui-react
-``` 
+```
+
 
 ## Requirements
 - Python 3.6 or higher
