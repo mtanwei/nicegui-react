@@ -320,22 +320,24 @@ class React(Element):
             if existing_vite_version:
                 vite_major_version = int(existing_vite_version.lstrip('^~>=<').split('.')[0])
             else:
-                vite_major_version = 4  # Default to Vite 4 if not specified
+                vite_major_version = 5  # Default to Vite 5 if not specified
 
             # Required dependencies and versions
             required_dependencies = {
-                'react': '^18.0.0',
-                'react-dom': '^18.0.0',
+                'react': '^18.3.1',
+                'react-dom': '^18.3.1',
             }
             if vite_major_version >= 5:
                 required_dev_dependencies = {
-                    'vite': '^5.0.0',
-                    '@vitejs/plugin-react-swc': '^3.0.0',
+                    'vite': '^5.4.10',
+                    'vite-plugin-jsx': '^0.0.6',
+                    '@vitejs/plugin-react': '^4.0.0',
                     '@rollup/plugin-replace': '^4.0.0',
                 }
             else:
                 required_dev_dependencies = {
                     'vite': '^4.0.0',
+                    'vite-plugin-jsx': '^0.0.6',
                     '@vitejs/plugin-react': '^4.0.0',
                     '@rollup/plugin-replace': '^4.0.0',
                 }
@@ -399,12 +401,13 @@ class React(Element):
                 "build": "vite build"
             },
             "dependencies": {
-                "react": "^18.0.0",
-                "react-dom": "^18.0.0"
+                "react": "^18.3.1",
+                "react-dom": "^18.3.1"
             },
             "devDependencies": {
-                "vite": "^4.0.0",
-                "@vitejs/plugin-react": "^4.0.0"
+                "vite": "^5.4.10",
+                "vite-plugin-jsx": "^0.0.6",
+                "@vitejs/plugin-react": "^4.3.3"
             }
         }
         with open(self.package_json_path, 'w') as f:
@@ -469,12 +472,14 @@ class React(Element):
     import {{ defineConfig }} from 'vite';
     import react from '{react_plugin_import}';
     import replace from '@rollup/plugin-replace';
+    import jsx from 'vite-plugin-jsx';
     import path from 'path';
     
     export default defineConfig({{
         base: '', //{base_path}/',  // Set the base path for assets
         plugins: [
             {react_plugin},
+            jsx(),
             replace({{
                 preventAssignment: true,
                 delimiters: ['', ''],
