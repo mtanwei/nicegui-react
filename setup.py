@@ -7,7 +7,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name='nicegui-react',
-    version='0.1.1',
+    version='0.1.2',
     description='Integrate React components into NiceGUI applications',
     long_description=README,
     long_description_content_type='text/markdown',
@@ -23,5 +23,5 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3.10',
+    python_requires='>=3.6',
 )
