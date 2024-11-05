@@ -1,9 +1,16 @@
 from setuptools import setup, find_packages
+import pathlib
+
+# Read the contents of your README file
+HERE = pathlib.Path(__file__).parent
+README = (HERE / "README.md").read_text()
 
 setup(
     name='nicegui-react',
-    version='0.1.0',
+    version='0.1.1',
     description='Integrate React components into NiceGUI applications',
+    long_description=README,
+    long_description_content_type='text/markdown',
     author='Pablo Schaffner',
     author_email='pablo@puntorigen.com',
     url='https://github.com/puntorigen/nicegui-react',
