@@ -320,7 +320,7 @@ class React(Element):
             if existing_vite_version:
                 vite_major_version = int(existing_vite_version.lstrip('^~>=<').split('.')[0])
             else:
-                vite_major_version = 5  # Default to Vite 5 if not specified
+                vite_major_version = 4  # Default to Vite 4 if not specified
 
             # Required dependencies and versions
             required_dependencies = {
@@ -330,16 +330,20 @@ class React(Element):
             if vite_major_version >= 5:
                 required_dev_dependencies = {
                     'vite': '^5.4.10',
-                    'vite-plugin-jsx': '^0.0.6',
-                    '@vitejs/plugin-react': '^4.0.0',
-                    '@rollup/plugin-replace': '^4.0.0',
+                    '@vitejs/plugin-react': '^4.2.1',
+                    '@rollup/plugin-replace': '^6.0.1',
+                    '@rollup/plugin-babel': '^6.0.4',
+                    '@babel/preset-env': '^7.26.0',
+                    '@babel/preset-react': '^7.25.9',
                 }
             else:
                 required_dev_dependencies = {
                     'vite': '^4.0.0',
-                    'vite-plugin-jsx': '^0.0.6',
-                    '@vitejs/plugin-react': '^4.0.0',
-                    '@rollup/plugin-replace': '^4.0.0',
+                    '@vitejs/plugin-react': '^4.2.1',
+                    '@rollup/plugin-replace': '^6.0.1',
+                    '@rollup/plugin-babel': '^6.0.4',
+                    '@babel/preset-env': '^7.26.0',
+                    '@babel/preset-react': '^7.25.9',
                 }
             required_scripts = {
                 'dev': 'vite',
@@ -405,9 +409,12 @@ class React(Element):
                 "react-dom": "^18.3.1"
             },
             "devDependencies": {
-                "vite": "^5.4.10",
-                "vite-plugin-jsx": "^0.0.6",
-                "@vitejs/plugin-react": "^4.3.3"
+                "vite": "^4.0.0",
+                "@vitejs/plugin-react": "^4.2.1",
+                "@rollup/plugin-replace": "6.0.1",
+                "@rollup/plugin-babel": "^6.0.4",
+                "@babel/preset-env": "^7.26.0",
+                "@babel/preset-react": "^7.25.9",
             }
         }
         with open(self.package_json_path, 'w') as f:
@@ -471,25 +478,19 @@ class React(Element):
         vite_config_content = f"""
     import {{ defineConfig }} from 'vite';
     import react from '{react_plugin_import}';
-    import replace from '@rollup/plugin-replace';
-    import jsx from 'vite-plugin-jsx';
+    import babel from '@rollup/plugin-babel';
     import path from 'path';
     
     export default defineConfig({{
         base: '', //{base_path}/',  // Set the base path for assets
         plugins: [
             {react_plugin},
-            jsx(),
-            replace({{
-                preventAssignment: true,
-                delimiters: ['', ''],
-                include: ['**/*.jsx','**/*.tsx','**/*.ts'],
-                //exclude: ['**/public/{self.component_id}/**','**/node_modules/**'], 
-                values: {{
-                    'assets/': '{public_path}/assets/',
-                    '{public_path}/{public_path}': '{public_path}',
-                }},
-            }}),
+            babel({{
+                babelHelpers: 'bundled',
+                presets: ['@babel/preset-env', '@babel/preset-react'],
+                extensions: ['.js', '.jsx', '.ts', '.tsx'],
+                exclude: 'node_modules/**',
+            }})
         ],
         {define_section}
         mode: 'development',
@@ -700,7 +701,7 @@ class React(Element):
         with open(self.package_json_path, 'r') as f:
             package_json = json.load(f)
         dev_dependencies = package_json.get('devDependencies', {})
-        vite_version = dev_dependencies.get('vite', 'unknown')
+        vite_version = dev_dependencies.get('vite', '^4.0.0')
         return vite_version
 
     def serve_bundle(self):
@@ -716,7 +717,12 @@ class React(Element):
         """
         Reads the manifest.json file to get the hashed filenames of main.js and associated CSS files.
         """
-        manifest_path = self.output_dir / 'manifest.json'
+        vite_version = self.get_vite_version()
+        if vite_version == '^4.0.0':
+            manifest_path = self.output_dir / 'manifest.json'
+        else:
+            manifest_path = self.output_dir / '.vite' / 'manifest.json'
+
         if not manifest_path.exists():
             raise FileNotFoundError(f"Manifest file not found: {manifest_path}")
         with open(manifest_path, 'r') as f:
