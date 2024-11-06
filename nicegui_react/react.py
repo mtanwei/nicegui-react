@@ -320,12 +320,12 @@ class React(Element):
             if existing_vite_version:
                 vite_major_version = int(existing_vite_version.lstrip('^~>=<').split('.')[0])
             else:
-                vite_major_version = 4  # Default to Vite 4 if not specified
+                vite_major_version = 5  # Default to Vite 4 if not specified
 
             # Required dependencies and versions
             required_dependencies = {
-                'react': '^18.3.1',
-                'react-dom': '^18.3.1',
+                'react': '^18.0.0',
+                'react-dom': '^18.0.0', 
             }
             if vite_major_version >= 5:
                 required_dev_dependencies = {
@@ -405,12 +405,12 @@ class React(Element):
                 "build": "vite build"
             },
             "dependencies": {
-                "react": "^18.3.1",
-                "react-dom": "^18.3.1"
+                "react": "^18.0.0",
+                "react-dom": "^18.0.0"
             },
             "devDependencies": {
-                "vite": "^4.0.0",
-                "@vitejs/plugin-react": "^4.2.1",
+                "vite": "^5.4.10",
+                "@vitejs/plugin-react": "^4.3.3",
                 "@rollup/plugin-replace": "6.0.1",
                 "@rollup/plugin-babel": "^6.0.4",
                 "@babel/preset-env": "^7.26.0",
@@ -459,7 +459,7 @@ class React(Element):
             react_plugin = "react()"
         else:
             react_plugin_import = "@vitejs/plugin-react"
-            react_plugin = "react()"
+            react_plugin = "react({ jsxRuntime: 'classic' })"
 
         # Adjust output directory relative path
         output_dir_relative = os.path.relpath(self.output_dir, start=self.react_project_path).replace('\\', '/')
@@ -479,18 +479,23 @@ class React(Element):
     import {{ defineConfig }} from 'vite';
     import react from '{react_plugin_import}';
     import babel from '@rollup/plugin-babel';
+    import replace from '@rollup/plugin-replace';
     import path from 'path';
     
     export default defineConfig({{
         base: '', //{base_path}/',  // Set the base path for assets
         plugins: [
             {react_plugin},
-            babel({{
-                babelHelpers: 'bundled',
-                presets: ['@babel/preset-env', '@babel/preset-react'],
-                extensions: ['.js', '.jsx', '.ts', '.tsx'],
-                exclude: 'node_modules/**',
-            }})
+            replace({{
+                preventAssignment: true,
+                delimiters: ['/', '/'],
+                include: ['**/*.jsx','**/*.tsx','**/*.ts'],
+                //exclude: ['**/public/{self.component_id}/**','**/node_modules/**'], 
+                values: {{
+                    'assets/': '{public_path}/assets/',
+                    '{public_path}/{public_path}': '{public_path}',
+                }},
+            }}),
         ],
         {define_section}
         mode: 'development',
@@ -498,7 +503,7 @@ class React(Element):
             outDir: './{output_dir_relative}',
             manifest: true,
             sourcemap: false,
-            minify: false,
+            minify: true,
             rollupOptions: {{
                 input: './main.jsx',
             }},
@@ -560,14 +565,19 @@ class React(Element):
         import ReactDOM from {'"react-dom/client"' if react_major_version >= 18 else '"react-dom"'};
         {import_statement}
 
-        document.addEventListener('DOMContentLoaded', function() {{
-            const container = document.getElementById('{self.component_id}');
+        console.log('React: script loaded');
 
+        function startApp() {{
+            const container = document.getElementById('{self.component_id}');
+            if (container) {{
+                console.log('React: container found');
+            }}
+            
             function parseProps(propsString) {{
                 try {{
                     return JSON.parse(propsString);
                 }} catch (e) {{
-                    console.error('Failed to parse props:', e);
+                    console.error('React: Failed to parse props:', e);
                     return {{}};
                 }}
             }}
@@ -630,10 +640,15 @@ class React(Element):
 
                 return <{self.main_component} {{...props}} {{...eventHandlers}} />;
             }};
-
+            console.log('rendering dom');
             const root = {'ReactDOM.createRoot(container)' if react_major_version >= 18 else 'null'};
             {'root.render(<AppWrapper />);' if react_major_version >= 18 else 'ReactDOM.render(<AppWrapper />, container);'}
-        }});
+            console.log('create_main_jsx called');
+        }};
+
+        setTimeout(() => {{
+            startApp();
+        }}, 100);
         """
 
         with open(self.main_jsx, 'w') as f:
@@ -712,6 +727,7 @@ class React(Element):
         static_path = f'/react/{self.component_hash}'
         app.add_static_files(static_path, abs_path)
         self.static_path = static_path
+        self.static_path_abs = abs_path
 
     def get_hashed_files(self):
         """
@@ -750,9 +766,17 @@ class React(Element):
 
         # Include JS file
         js_file = hashed_files.get('js')
+        # get abs path of js file
+        abs_js_path = self.static_path_abs / js_file
+
+        # Add the JS content to the UI
         if js_file:
             script_url = f"{self.static_path}/{js_file}"
-            ui.add_body_html(f'<script type="module" src="{script_url}"></script>')
+            #ui.add_body_html(f'<script type="module" src="{script_url}" defer async></script>')
+            # read the contents of the js file
+            with open(abs_js_path, 'r') as f:
+                js_content = f.read()
+                ui.run_javascript(js_content)
         else:
             raise FileNotFoundError("Hashed JS file not found in manifest.json")
 
