@@ -448,7 +448,7 @@ class React(Element):
             vite_major_version = 4  # Default to Vite 4 if parsing fails
 
         if vite_major_version >= 5:
-            react_plugin_import = "@vitejs/plugin-react-swc"
+            react_plugin_import = "@vitejs/plugin-react"
             react_plugin = "react()"
         else:
             react_plugin_import = "@vitejs/plugin-react"
