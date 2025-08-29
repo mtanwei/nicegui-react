@@ -16,7 +16,7 @@ setup(
     url='https://github.com/puntorigen/nicegui-react',
     packages=find_packages(),
     install_requires=[
-        'nicegui>=2.3.0',
+        'nicegui~=2.22.0',
     ],
     classifiers=[
         'Programming Language :: Python :: 3',

@@ -71,7 +71,6 @@ class React(Element):
         self._props['id'] = self.component_id
 
         # Initialize props storage and event handlers
-        self.client = ui.context.client
         self.client_id = self.client.id
         self.react_props = {}
         self.event_handlers = {}
